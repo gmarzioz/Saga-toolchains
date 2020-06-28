@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>Stream Power Index (SPI)</identifier>
+  <name>Zermo Stream Power Index (SPI)</name>
+  <author>Giuseppe Marzio Zermo</author>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+	Create Stream Power Index Map
+
+	Use two input grid:
+		1) Specific Catchment Area [m]
+		2) Slope [rad]
+
+	Example formula:
+	g1 * (tan(g2))
+
+  </description>
+  <parameters>
+    <option varname="MY_GRID_SYSTEM" type="grid_system">
+	<name>Grid System</name>
+	</option>
+    <input varname="AS_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Specific Catchment Area [m]</name>
+    </input>
+    <input varname="SL_GRID" type="grid" parent="MY_GRID_SYSTEM">
+    <name>Slope [rad]</name>
+    </input>
+    <output varname="tool_01__RESULT" type="grid" parent="MY_GRID_SYSTEM">
+      <name>SPI</name>
+    </output>
+  </parameters>
+  <tools>
+    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">tool_01__RESULT</output>
+      <option id="FORMULA">g1 * (tan(g2))</option>
+      <option id="NAME">Stream_Power_Index_SPI</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">8</option>
+      <input id="GRIDS">AS_GRID</input>
+      <input id="GRIDS">SL_GRID</input>
+    </tool>
+  </tools>
+</toolchain>

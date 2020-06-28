@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>AF</identifier>
+  <name>Zermo Asimmetry Factor (AF)</name>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+
+	Asimmetry Factor
+	Create a channel intersection layer
+	Create a point in Right part of stream (optional)
+	
+	Input:
+	1) Upslope Area
+	2) Intersection Channel
+	3) Rx Point (with two fields: ID,NAME)
+
+	Output:
+	1) Catchment Area (optional)
+	2) Intersection Polygon
+	3) AF table (optional)
+
+	Equation:
+	AF= At/Ar 
+
+	Example formula:
+	AF= f3 / f4 (of Rx Point)
+
+  </description>
+  <parameters>
+    <!--<input varname="tool_06__DEM" type="grid_system">
+      <name>DEM</name>
+    </input>-->
+    <input varname="MY_GRID" type="grid">
+      <name>Upslope Area</name>
+    </input>
+    <input varname="MY_CHANNEL" type="shapes">
+      <name>Intersection Channel</name>
+    </input>
+    <input varname="RX_POINT" type="shapes" optional="true">
+      <name>RX River Point</name>
+    </input>
+    <output varname="MY_POLYGON_TOT" type="shapes" optional="true">
+      <name>Catchment Area</name>
+    </output>
+    <output varname="MY_POLYGONS" type="shapes">
+      <name>Intersection</name>
+    </output>
+    <output varname="tool_01__COPY" type="table" optional="true">
+      <name>AF table</name>
+    </output>
+  </parameters>
+  <tools>
+    <!--<tool library="ta_preprocessor" tool="3" name="Fill Sinks (Planchon/Darboux, 2001)">
+      <output id="RESULT">tool_06__RESULT</output>
+      <option id="MINSLOPE">0.010000</option>
+      <input id="DEM">tool_06__DEM</input>
+    </tool>-->
+    <!--<tool library="ta_channels" tool="5" name="Channel Network and Drainage Basins">
+      <output id="SEGMENTS">tool_05__SEGMENTS</output>
+      <option id="THRESHOLD">8</option>
+      <input id="DEM">tool_03__GRIDS</input>
+    </tool>-->
+    <!--<tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">tool_02__RESULT</output>
+      <option id="FORMULA">g1/g1</option>
+      <option id="NAME">Upslope_Area_Mask</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">1</option>
+      <input id="GRIDS">tool_03__GRIDS</input>
+    </tool>-->
+    <tool library="grid_tools" tool="15" name="Reclassify Grid Values">
+      <output id="RESULT">tool_02__RESULT</output>
+      <option id="METHOD">1</option>
+      <option id="MIN">1.000000</option>
+      <option id="MAX">99999.000000</option>
+      <option id="RNEW">1.000000</option>
+      <option id="ROPERATOR">0</option>
+      <option id="NODATAOPT">false</option>
+      <option id="OTHEROPT">true</option>
+      <option id="OTHERS">-99999.000000</option>
+      <option id="RESULT_TYPE">9</option>
+      <option id="RESULT_NODATA_CHOICE">0</option>
+      <input id="INPUT">MY_GRID</input>
+    </tool>
+    <tool library="shapes_grid" tool="6" name="Vectorising Grid Classes">
+      <output id="POLYGONS">tool_03__POLYGONS</output>
+      <option id="CLASS_ALL">1</option>
+      <option id="SPLIT">0</option>
+      <option id="ALLVERTICES">false</option>
+      <input id="GRID">tool_02__RESULT</input>
+    </tool>
+    <tool library="shapes_polygons" tool="2" name="Polygon Properties">
+      <output id="OUTPUT">MY_POLYGON_TOT</output>
+      <option id="FIELDS">&lt;not set&gt;</option>
+      <option id="BPARTS">false</option>
+      <option id="BPOINTS">false</option>
+      <option id="BEXTENT">false</option>
+      <option id="BCENTER">false</option>
+      <option id="BLENGTH">true</option>
+      <option id="BAREA">true</option>
+      <option id="SCALING">1.000000</option>
+      <input id="POLYGONS">tool_03__POLYGONS</input>
+    </tool>
+        <tool library="shapes_tools" tool="5" name="Select by Location...">
+      <input id="SHAPES">MY_CHANNEL</input>
+      <input id="LOCATIONS">MY_POLYGON_TOT</input>
+      <option id="CONDITION">0</option>
+      <option id="METHOD">0</option>
+    </tool>
+    <!--<tool library="shapes_tools" tool="6" name="Selection">
+      <output id="OUTPUT">tool_01__OUTPUT</output>
+      <input id="INPUT">MY_CHANNEL</input>
+    </tool>-->
+    <tool library="shapes_polygons" tool="8" name="Polygon-Line Intersection">
+      <output id="INTERSECT">tool_05__INTERSECT</output>
+      <input id="POLYGONS">MY_POLYGON_TOT</input>
+      <input id="LINES">MY_CHANNEL</input>
+    </tool>
+    <tool library="shapes_polygons" tool="2" name="Polygon Properties">
+      <output id="OUTPUT">MY_POLYGONS</output>
+      <option id="FIELDS">&lt;not set&gt;</option>
+      <option id="BPARTS">false</option>
+      <option id="BPOINTS">false</option>
+      <option id="BEXTENT">false</option>
+      <option id="BCENTER">false</option>
+      <option id="BLENGTH">true</option>
+      <option id="BAREA">true</option>
+      <option id="SCALING">1.000000</option>
+      <input id="POLYGONS">tool_05__INTERSECT</input>
+    </tool>
+    <!--<tool library="shapes_tools" tool="2" varname="true" name="Merge Layers">
+      <output id="MERGED">tool_01__MERGED</output>
+      <option id="SRCINFO">true</option>
+      <option id="MATCH">true</option>
+      <option id="DELETE">false</option>
+      <input id="INPUT">MY_POLYGON_TOT</input>
+      <input id="INPUT">MY_POLYGONS</input>
+    </tool>-->
+    <condition type="exists" variable="RX_POINT">
+    <tool library="shapes_points" tool="10" name="Add Polygon Attributes to Points">
+      <output id="OUTPUT">RX_POINT</output>
+      <option id="FIELDS">1</option>
+      <input id="INPUT">RX_POINT</input>
+      <input id="POLYGONS">MY_POLYGON_TOT</input>
+    </tool>
+    <tool library="shapes_points" tool="10" name="Add Polygon Attributes to Points">
+      <output id="OUTPUT">RX_POINT</output>
+      <option id="FIELDS">1</option>
+      <input id="INPUT">RX_POINT</input>
+      <input id="POLYGONS">MY_POLYGONS</input>
+    </tool>
+    <tool library="table_calculus" tool="2" name="Field Calculator">
+      <output id="RESULT">RX_POINT</output>
+      <option id="FIELD">&lt;not set&gt;</option>
+      <option id="NAME">AF</option>
+      <option id="FORMULA">f3 / f4</option>
+      <option id="SELECTION">false</option>
+      <option id="USE_NODATA">false</option>
+      <input id="TABLE">RX_POINT</input>
+    </tool>
+    <tool library="table_tools" tool="22" name="Copy table">
+      <output id="COPY">tool_01__COPY</output>
+      <input id="TABLE">RX_POINT</input>
+    </tool>
+    </condition>
+    <condition type="non_exists" variable="RX_POINT">
+    <tool library="table_tools" tool="22" name="Copy table">
+      <output id="COPY">tool_01__COPY</output>
+      <input id="TABLE">MY_POLYGONS</input>
+    </tool>
+    </condition>
+    <condition type="exists" variable="RX_POINT">
+    <tool library="table_tools" tool="22" name="Copy table">
+      <output id="COPY">tool_01__COPY</output>
+      <input id="TABLE">RX_POINT</input>
+    </tool>
+    </condition>
+  </tools>
+</toolchain>

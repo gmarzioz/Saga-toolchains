@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>HC</identifier>
+  <name>Zermo Hypsometric Curve (HC)</name>
+  <author>Giuseppe Marzio Zermo</author>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+	Create Hypsometric Curve Table
+
+	Use one input grid:
+		1) Elevationv no SINK
+ 		2) Catchment area (Upslope Area)
+		3) Sample Points [!! fields: (ID,NAME)]
+
+	Outup:
+	1) Flow Accumulation
+	2) Catchment Area Basin Mask
+	3) Clipped DEM Catchment Area
+	4) Catchment Area Polygon
+	5) Statistic for Grid
+
+	Equation:
+	h= h (Sample Point) - hmin (Catchment Area)
+	H= hmax (Catchment Area) - hmin (Cathment Area)
+	A = Catchment Area [m^2]
+	a= A [m^2] - Flow Accumulation (Point Value [m^2])
+	HC_x = h/H	
+        HC_y = a/A
+
+	Example formula:
+	a/A = (f5 - f4) / f5
+	h/H = (f3 - f6) / (f7 - f6)
+  </description>
+  <parameters>
+    <option varname="MY_GRID_SYSTEM" type="grid_system">
+	<name>Grid System</name>
+    </option>
+    <input varname="DEM_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Elevation</name>
+    </input>
+    <input varname="SCA_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Upslope Area</name>
+    </input>
+    <input varname="tool_01__POINTS" type="shapes">
+      <name>Sample Points</name>
+    </input>
+    <output varname="tool_01__FLOW" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+      <name>Flow Accumulation</name>
+    </output>
+    <output varname="MASK_GRID" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+    <name>Catchment MASK</name>
+    </output>
+    <output varname="DEM_CLIP" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+      <name>Clipped DEM</name>
+    </output>
+    <output varname="MY_POLYGON" type="shapes" optional="true">
+      <name>Catchment Area Polygons</name>
+    </output>
+    <output varname="tool_01__COPY" type="table" optional="true">
+      <name>HC table</name>
+    </output>
+    <!--<output varname="MASK_GRID_CR" type="grid" optional="true">
+    <name>Catchment MASK Cropped</name>
+    </output>
+    <output varname="DEM_CLIP_CR" type="data_object" optional="true">
+      <name>Clipped DEM Cropped</name>
+    </output>-->
+  </parameters>
+  <tools>
+    <tool library="grid_tools" tool="15" name="Reclassify Grid Values">
+      <output id="RESULT">tool_01__RESULT</output>
+      <option id="METHOD">1</option>
+      <option id="MIN">1.000000</option>
+      <option id="MAX">99999.000000</option>
+      <option id="RNEW">1.000000</option>
+      <option id="ROPERATOR">0</option>
+      <option id="NODATAOPT">false</option>
+      <option id="OTHEROPT">true</option>
+      <option id="OTHERS">-99999.000000</option>
+      <option id="RESULT_TYPE">9</option>
+      <option id="RESULT_NODATA_CHOICE">0</option>
+      <input id="INPUT">SCA_GRID</input>
+    </tool>
+    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">DEM_CLIP</output>
+      <option id="FORMULA">g1 * g2</option>
+      <option id="NAME">Clipped DEM</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">7</option>
+      <input id="GRIDS">DEM_GRID</input>
+      <input id="GRIDS">tool_01__RESULT</input>
+    </tool>
+    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">MASK_GRID</output>
+      <option id="FORMULA">g1/g1</option>
+      <option id="NAME">Catchment MASK</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">0</option>
+      <input id="GRIDS">tool_01__RESULT</input>
+    </tool>
+    <tool library="ta_hydrology" tool="0" name="Flow Accumulation (Top-Down)">
+      <output id="FLOW">tool_01__FLOW</output>
+      <option id="STEP">1</option>
+      <option id="FLOW_UNIT">1</option>
+      <option id="METHOD">4</option>
+      <option id="LINEAR_DO">true</option>
+      <option id="LINEAR_MIN">500</option>
+      <option id="CONVERGENCE">1.100000</option>
+      <input id="ELEVATION">DEM_CLIP</input>
+    </tool>
+    <tool library="shapes_grid" tool="6" name="Vectorising Grid Classes">
+      <output id="POLYGONS">tool_01__POLYGONS</output>
+      <option id="CLASS_ALL">0</option>
+      <option id="CLASS_ID">1.000000</option>
+      <option id="SPLIT">0</option>
+      <option id="ALLVERTICES">false</option>
+      <input id="GRID">tool_01__RESULT</input>
+    </tool>
+    <tool library="shapes_polygons" tool="2" name="Polygon Properties">
+      <output id="OUTPUT">MY_POLYGON</output>
+      <option id="FIELDS">&lt;no attributes&gt;</option>
+      <option id="BPARTS">false</option>
+      <option id="BPOINTS">false</option>
+      <option id="BEXTENT">false</option>
+      <option id="BCENTER">false</option>
+      <option id="BLENGTH">false</option>
+      <option id="BAREA">true</option>
+      <option id="SCALING">1.000000</option>
+      <input id="POLYGONS">tool_01__POLYGONS</input>
+    </tool>
+    <!--Quota, mean, min, max-->
+    <tool library="shapes_grid" tool="2" name="Grid Statistics for Polygons">
+      <output id="RESULT">MY_POLYGON</output>
+      <option id="NAMING">1</option>
+      <option id="METHOD">0</option>
+      <option id="COUNT">false</option>
+      <option id="MIN">true</option>
+      <option id="MAX">true</option>
+      <option id="RANGE">false</option>
+      <option id="SUM">false</option>
+      <option id="MEAN">true</option>
+      <option id="VAR">false</option>
+      <option id="STDDEV">false</option>
+      <option id="GINI">false</option>
+      <option id="QUANTILES"/>
+      <input id="GRIDS">DEM_CLIP</input>
+      <input id="POLYGONS">MY_POLYGON</input>
+    </tool>
+    <!--Quota-->
+    <tool library="shapes_grid" tool="0" name="Add Grid Values to Points">
+      <output id="RESULT">tool_01__POINTS</output>
+      <option id="RESAMPLING">3</option>
+      <input id="SHAPES">tool_01__POINTS</input>
+      <input id="GRIDS">DEM_CLIP</input>
+    </tool>
+    <!--Flow-->
+    <tool library="shapes_grid" tool="0" name="Add Grid Values to Points">
+      <output id="RESULT">tool_01__POINTS</output>
+      <option id="RESAMPLING">3</option>
+      <input id="SHAPES">tool_01__POINTS</input>
+      <input id="GRIDS">tool_01__FLOW</input>
+    </tool>
+    <!--Area-->
+    <tool library="shapes_points" tool="10" name="Add Polygon Attributes to Points">
+      <output id="OUTPUT">tool_01__POINTS</output>
+      <option id="FIELDS">0,1,2,3</option>
+      <input id="INPUT">tool_01__POINTS</input>
+      <input id="POLYGONS">MY_POLYGON</input>
+    </tool>
+    <!--<tool library="grid_tools" tool="17" name="Crop to Data">
+      <output id="OUTPUT">MASK_GRID_CR</output>
+      <input id="INPUT">MASK_GRID</input>
+    </tool>-->
+    <!--<tool library="grid_tools" tool="17" name="Crop to Data">
+      <output id="OUTPUT">DEM_CLIP_CR</output>
+      <input id="INPUT">DEM_CLIP</input>
+    </tool>-->
+    <tool library="table_calculus" tool="2" name="Field Calculator">
+      <output id="RESULT">tool_01__POINTS</output>
+      <option id="FIELD">&lt;not set&gt;</option>
+      <option id="NAME">a/A</option>
+      <option id="FORMULA">(f5 - f4) / f5</option>
+      <option id="SELECTION">false</option>
+      <option id="USE_NODATA">false</option>
+      <input id="TABLE">tool_01__POINTS</input>
+    </tool>
+    <tool library="table_calculus" tool="2" name="Field Calculator">
+      <output id="RESULT">tool_01__POINTS</output>
+      <option id="FIELD">&lt;not set&gt;</option>
+      <option id="NAME">h/H</option>
+      <option id="FORMULA">(f3 - f6) / (f7 - f6)</option>
+      <option id="SELECTION">false</option>
+      <option id="USE_NODATA">false</option>
+      <input id="TABLE">tool_01__POINTS</input>
+    </tool>
+    <tool library="table_tools" tool="21" name="Table Field Enumeration (Shapes)">
+      <input id="INPUT">tool_01__POINTS</input>
+      <output id="OUTPUT">tool_01__POINTS</output>
+      <option id="FIELD">&lt;not set&gt;</option>
+      <option id="ENUM">ID</option>
+      <option id="ORDER">0</option>
+    </tool>
+    <tool library="table_tools" tool="22" name="Copy table">
+      <output id="COPY">tool_01__COPY</output>
+      <input id="TABLE">tool_01__POINTS</input>
+    </tool>
+  </tools>
+</toolchain>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>Specific catchment area (As)</identifier>
+  <name>Zermo Specific catchment area (As)</name>
+  <author>Giuseppe Marzio Zermo</author>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+	Create Specific catchment area Map
+
+	Use two input grid:
+		1) Flow accumulation (Top-Down) [Number of cells]
+	Input value:
+		1) Pixel length [m]
+
+	Example formula:
+	g1 * $(PIXEL_LENGTH)
+
+  </description>
+  <parameters>
+    <option varname="MY_GRID_SYSTEM" type="grid_system">
+	<name>Grid System</name>
+	</option>
+    <input varname="AS_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Flow accumulation</name>
+    </input>
+    <output varname="tool_01__RESULT" type="grid" parent="MY_GRID_SYSTEM">
+      <name>As</name>
+    </output>
+    <option varname="PIXEL_LENGTH" type="double">
+			<name>Pixel length</name>
+			<value min="1.0">10.0</value>
+			<description>Pixel length in meters.</description>
+    </option>
+  </parameters>
+  <tools>
+	    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+	      <output id="RESULT">tool_01__RESULT</output>
+	      <option id="FORMULA">g1 * $(PIXEL_LENGTH)</option>
+	      <option id="NAME">Specific_Catchment_Area(As)</option>
+	      <option id="FNAME">false</option>
+	      <option id="USE_NODATA">false</option>
+	      <option id="TYPE">7</option>
+	      <input id="GRIDS">AS_GRID</input>
+	    </tool>
+  </tools>
+</toolchain>

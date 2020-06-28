@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>Topographic Wetness Index (TWI)</identifier>
+  <name>Zermo Topographic Wetness Index (TWI)</name>
+  <author>Giuseppe Marzio Zermo</author>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+	Create Topographic Wetness Index Map
+
+	Use two input grid:
+		1) Specific Catchment Area [m]
+		2) Slope [rad]
+
+	Example formula:
+	ln(g1/(tan(g2)))
+
+	Ps: 
+	-Set range data
+	-Mirror color 
+
+  </description>
+  <parameters>
+    <option varname="MY_GRID_SYSTEM" type="grid_system">
+	<name>Grid System</name>
+	</option>
+    <input varname="AS_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Specific Catchment Area [m]</name>
+    </input>
+    <input varname="SL_GRID" type="grid" parent="MY_GRID_SYSTEM">
+    <name>Slope [rad]</name>
+    </input>
+    <output varname="tool_01__RESULT" type="grid" parent="MY_GRID_SYSTEM">
+      <name>TWI</name>
+	<colours>0</colours>
+    </output>
+    <output varname="tool_02__RESULT" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+      <name>TWI_norm</name>
+    </output>
+	<option varname="MY_TYPE" type="choice">
+	<name>TWI Data type</name>
+	<choices>bit|unsigned 1 byte integer|signed 1 byte integer|unsigned 2 byte integer|singned 2 byte integer|unsigned 4 byte integer|signed 4 byte integer|4 byte floating point number|8 byte floating point number|</choices>
+	<value>7</value>
+	</option>
+
+  <!--<DATA type="grid" id="GRID" name="Grid"/>-->
+  <!--<option type="integer" id="COUNT" name="Number of Colors">11</option>-->
+  <!--<option type="choice" id="SCALE" name="Scale" index="0">Grid range</option>-->
+  <option varname="MY_RANGE" type="range">
+	<name>Range</name>
+	<value>0;10</value>
+  </option>
+  </parameters>
+  <tools>
+    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">tool_01__RESULT</output>
+      <option id="FORMULA">ln(g1/(tan(g2)))</option>
+      <option id="NAME">Topographic_Wetness_Index_TWI</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE" varname="true">MY_TYPE</option>
+      <!--<option id="RANGE" varname="true">MY_RANGE</option>-->
+      <input id="GRIDS">AS_GRID</input>
+      <input id="GRIDS">SL_GRID</input>
+    </tool>
+	<condition type="exists" variable="tool_02__RESULT">
+	    <tool library="grid_calculus" tool="0" name="Grid Normalization">
+	      <input id="INPUT" type="grid">tool_01__RESULT</input>
+	      <output id="OUTPUT">tool_02_RESULT</output>
+	      <option id="RANGE" varname="true">MY_RANGE</option>
+	    </tool>
+	</condition>
+  </tools>
+</toolchain>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>HI_interactive</identifier>
+  <name>Zermo Hypsometric Index (HI) [Interactive]</name>
+  <author>Giuseppe Marzio Zermo</author>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+	Create Hypsometric Index Map
+
+	Use one input grid:
+		1) Elevation
+
+	Outup:
+	Upslope area
+	Basin Mask
+
+	Equation:
+	HI = H(mean) - H(min) / H(max) - H(mean)	
+
+	Example formula:
+	(f1 - f2) / (f3 - f1)
+
+  </description>
+  <parameters>
+    <option varname="MY_GRID_SYSTEM" type="grid_system">
+	<name>Grid System</name>
+	</option>
+    <input varname="DEM_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Elevation</name>
+    </input>
+    <input varname="SINKROUTE" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+    <name>Sinkroute</name>
+    </input>
+    <input varname="MASK_GRID" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+    <name>MASK</name>
+    </input>
+    <input varname="MY_TARGET" type="shapes">
+	<name>TARGET</name>
+    </input>
+    <output varname="tool_02__RESULT" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+      <name>Upslope Area</name>
+    </output>
+    <output varname="tool_01__RESULT" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+      <name>BASIN MASK</name>
+    </output>
+    <option varname="MY_METHOD" type="choice">
+	<name>Method</name>
+	<choices>Deterministic|Deterministic Infinity|Multiple Flow Direction|Multiple Triangular Flow Direction|Multiple Maximum Downslope Gradient Based Flow Direction|</choices>
+	<value>2</value>
+     </option>
+     <option varname="MY_CONV" type="double">
+	<name>Convergence</name>
+	<value>1.1</value>
+     </option>
+  </parameters>
+  <tools>
+    <tool library="ta_hydrology" tool="3" name="Upslope Area">
+      <input id="ELEVATION">DEM_GRID</input>
+      <input id="TARGET" varname="true">MY_TARGET</input>
+      <!--<input id="SINKROUTE" optional="true">SINKROUTE</input>-->
+      <output id="AREA">tool_02__RESULT</output>
+      <option id="METHOD" varname="true">MY_METHOD</option>
+      <option id="CONVERGE" varname="true">MY_CONV</option>
+    </tool>
+
+    <!--<tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">tool_02__RESULT</output>
+      <option id="FORMULA">g1 * (tan(g2))</option>
+      <option id="NAME">Hyspometric Index</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">7</option>
+      <input id="GRIDS">DEM_GRID</input>
+      <input id="GRIDS">MASK_GRID</input>
+    </tool>-->
+  </tools>
+</toolchain>

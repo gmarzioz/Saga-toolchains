@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchain saga-version="7.7.0">
+  <group>terrain_analysis</group>
+  <identifier>HI</identifier>
+  <name>Zermo Hypsometric Index (HI)</name>
+  <author>Giuseppe Marzio Zermo</author>
+  <menu>Hydrology|Topographic Indices</menu>
+  <description>
+	Create Hypsometric Index Map
+
+	Use one input grid:
+		1) Elevation
+ 		2) Catchment area
+
+	Outup:
+	1) Catchment Area Basin Mask
+	2) Clipped DEM Catchment Area
+	3) Catchment Area Polygon
+	3) Statistic for Grid
+
+	Equation:
+	HI = H(mean) - H(min) / H(max) - H(mean)	
+
+	Example formula:
+	(f1 - f2) / (f3 - f1)
+
+  </description>
+  <parameters>
+    <option varname="MY_GRID_SYSTEM" type="grid_system">
+	<name>Grid System</name>
+    </option>
+    <input varname="DEM_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Elevation</name>
+    </input>
+    <input varname="SCA_GRID" type="grid" parent="MY_GRID_SYSTEM">
+      <name>Upslope Area</name>
+    </input>
+    <output varname="MASK_GRID" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+    <name>Catchment MASK</name>
+    </output>
+    <output varname="DEM_CLIP" type="grid" parent="MY_GRID_SYSTEM" optional="true">
+      <name>Clipped DEM</name>
+    </output>
+    <output varname="MY_POLYGON" type="shapes" optional="true">
+      <name>Catchment Area Polygons</name>
+    </output>
+    <!--<output varname="MASK_GRID_CR" type="grid" optional="true">
+    <name>Catchment MASK Cropped</name>
+    </output>
+    <output varname="DEM_CLIP_CR" type="data_object" optional="true">
+      <name>Clipped DEM Cropped</name>
+    </output>-->
+    <output varname="tool_01__STATS" type="table">
+      <name>HI table</name>
+    </output>
+  </parameters>
+  <tools>
+    <tool library="grid_tools" tool="15" name="Reclassify Grid Values">
+      <output id="RESULT">tool_01__RESULT</output>
+      <option id="METHOD">1</option>
+      <option id="MIN">1.000000</option>
+      <option id="MAX">99999.000000</option>
+      <option id="RNEW">1.000000</option>
+      <option id="ROPERATOR">0</option>
+      <option id="NODATAOPT">false</option>
+      <option id="OTHEROPT">true</option>
+      <option id="OTHERS">-99999.000000</option>
+      <option id="RESULT_TYPE">9</option>
+      <option id="RESULT_NODATA_CHOICE">0</option>
+      <input id="INPUT">SCA_GRID</input>
+    </tool>
+    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">DEM_CLIP</output>
+      <option id="FORMULA">g1 * g2</option>
+      <option id="NAME">Clipped DEM</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">7</option>
+      <input id="GRIDS">DEM_GRID</input>
+      <input id="GRIDS">tool_01__RESULT</input>
+    </tool>
+    <tool library="grid_calculus" tool="1" name="Grid Calculator">
+      <output id="RESULT">MASK_GRID</output>
+      <option id="FORMULA">g1/g1</option>
+      <option id="NAME">Catchment MASK</option>
+      <option id="FNAME">false</option>
+      <option id="USE_NODATA">false</option>
+      <option id="TYPE">0</option>
+      <input id="GRIDS">tool_01__RESULT</input>
+    </tool>
+    <tool library="shapes_grid" tool="6" name="Vectorising Grid Classes">
+      <output id="POLYGONS">tool_01__POLYGONS</output>
+      <option id="CLASS_ALL">0</option>
+      <option id="CLASS_ID">1.000000</option>
+      <option id="SPLIT">0</option>
+      <option id="ALLVERTICES">false</option>
+      <input id="GRID">tool_01__RESULT</input>
+    </tool>
+    <tool library="shapes_polygons" tool="2" name="Polygon Properties">
+      <output id="OUTPUT">MY_POLYGON</output>
+      <option id="FIELDS">&lt;no attributes&gt;</option>
+      <option id="BPARTS">false</option>
+      <option id="BPOINTS">false</option>
+      <option id="BEXTENT">true</option>
+      <option id="BCENTER">false</option>
+      <option id="BLENGTH">true</option>
+      <option id="BAREA">true</option>
+      <option id="SCALING">1.000000</option>
+      <input id="POLYGONS">tool_01__POLYGONS</input>
+    </tool>
+    <!--<tool library="grid_tools" tool="17" name="Crop to Data">
+      <output id="OUTPUT">MASK_GRID_CR</output>
+      <input id="INPUT">MASK_GRID</input>
+    </tool>-->
+    <!--<tool library="grid_tools" tool="17" name="Crop to Data">
+      <output id="OUTPUT">DEM_CLIP_CR</output>
+      <input id="INPUT">DEM_CLIP</input>
+    </tool>-->
+    <tool library="statistics_grid" tool="13" name="Save Grid Statistics to Table">
+      <output id="STATS">tool_01__STATS</output>
+      <option id="DATA_CELLS">true</option>
+      <option id="NODATA_CELLS">false</option>
+      <option id="CELLSIZE">true</option>
+      <option id="MEAN">true</option>
+      <option id="MIN">true</option>
+      <option id="MAX">true</option>
+      <option id="RANGE">false</option>
+      <option id="SUM">false</option>
+      <option id="SUM2">false</option>
+      <option id="VAR">false</option>
+      <option id="STDDEV">false</option>
+      <option id="STDDEVLO">false</option>
+      <option id="STDDEVHI">false</option>
+      <option id="PCTL_VAL">false</option>
+      <option id="PCTL_HST">false</option>
+      <option id="SAMPLES">0.000000</option>
+      <input id="GRIDS">DEM_CLIP</input>
+    </tool>
+    <tool library="table_calculus" tool="1" name="Field Calculator">
+      <!--<output id="RESULT">tool_01__STATS</output>-->
+      <option id="FIELD">&lt;not set&gt;</option>
+      <option id="NAME">HI</option>
+      <option id="FORMULA">(f4 - f5) / (f6 - f5)</option>
+      <option id="USE_NODATA">false</option>
+      <input id="TABLE">tool_01__STATS</input>
+    </tool>
+    <tool library="table_calculus" tool="1" name="Field Calculator">
+      <!--<output id="RESULT">tool_01__STATS</output>-->
+      <option id="FIELD">&lt;not set&gt;</option>
+      <option id="NAME">Area</option>
+      <option id="FORMULA">f2 * (f3^2)</option>
+      <option id="USE_NODATA">false</option>
+      <input id="TABLE">tool_01__STATS</input>
+    </tool>
+  </tools>
+</toolchain>
